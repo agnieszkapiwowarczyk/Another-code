@@ -1,0 +1,108 @@
+# -*- coding: cp1250 -*-
+####
+#cosinus.py
+#obliczenie wartości cosinusa dla punktów z pliku tekstowego 'pkt_cosinusy.txt'
+#parametry: plik tekstowy 'pkt_cosinusy.txt'
+#wynik: 1)lista (cosinus_lista) z elementami (Wierzchołaek kąta, Lewe ramię kąta, Prawe rammię kąta, Wartość cosinusa tego kąta), 
+#       2)lista (cosinus_1) zawierająca wiersze z dodatnimi wartościami cosinus i cosinus_2 z ujemnymi wartościami
+#       3)plik tekstowy z zapisanymi listami: cosinus_1 oraz cosinus_2
+#Agnieszka Piwowarczyk, 23.12.2016 r.
+#ver.1.0
+####
+
+import math, os
+
+# funkcja zwraca True, dla elementu w liście, dla którego cosinus jest ujemny
+# element[3] - element z listy zawierający wartość cosinus
+def wart_ujemne(element):
+    if element[3] < 0:
+        return True
+    else:
+        return False
+    
+# funkcja zwraca True jeśli cosinus jest dodatni   
+def wart_dodatnie(element):
+    return not wart_ujemne(element)
+
+# funkcja przygotowywuje element listy do zapisu do pliku
+def zapis(el):
+    return (str(el[0])+"          "+str(el[1])+"          "+str(el[2])+"          "+str(el[3])+"\n")
+
+#funkcja plik('nazwa pliku'), importująca plik tekstowy
+def plik(pl):
+    punkty = []
+    plik = open(pl)
+    licz_wiersz = 1
+    for rekord in plik.readlines():
+        bez_zn_kon = rekord.rstrip()
+        wartosci = bez_zn_kon.split (";")
+        pkt = []
+        pkt.append(licz_wiersz)
+        licz_wiersz += 1
+        for i in wartosci:
+            pkt.append(float(i))
+        punkty.append(pkt)
+    plik.close()
+    return punkty
+
+pkt = plik(r'pkt_cosinusy.txt');
+
+# Definicja odleglosci miedzy punktami
+def odl(x1, y1, x2, y2):
+    odl = math.sqrt(((x2-x1)**2)+((y2-y1)**2))
+    return odl
+
+# Definicja cosinusa zawartego mieszy trzema bokami trojkata 123,
+# gdzie: 1 - prawe ramie kata, 2-wierzcholek, 3 - lewe ramie kata
+# bok 1-3 - naprzeciwlegly bok kata
+def cosinus(x1, y1, x2, y2, x3, y3):
+    a = odl(x1,y1,x3,y3)
+    b = odl(x1,y1,x2,y2)
+    c = odl(x2,y2,x3,y3)
+    cosinus =(-(a**2)+(b**2)+(c**2))/(2*b*c)
+    return cosinus
+
+# Okreslenie punktu poczatkowego i koncowego
+# Punkt poczatkowy jest punktem 2-gim (indeks 1), poniewaz punkt 1 nie otrzymuje wartosci cos.
+# Punkt ostatni bedzie punktem o indeksie mniejszym od 1 od rozmiaru listy
+p_ost = len(pkt)-1
+nr_pkt = 1
+
+# Otworzenie pliku, dla ktorego zapisywane beda poszczegolne cosinusy oraz odpowiadajace im punkty
+# Obliczenie cosinusa poszczegolnych punktow. Petla bedzie sie wykonywac do momentu, az numer punktu przyjmie wartosc maksymalna-1
+# (dla punktu ostatniego nie ma mozliwosci wyznaczenia wartosci cosinusa - brak prawego wierzcholka
+cosinus_lista = [] #lista ze wszystkimi elementami
+cosinusy = open(r'cosinus_lista.txt','w') #wszystko
+cosinusy.write("Wierzcholek  Lewe ramie kata  Prawe ramie kata  Wartosc kata \n")
+while nr_pkt<p_ost:
+    cos = cosinus(pkt[nr_pkt-1][1],pkt[nr_pkt-1][2],pkt[nr_pkt][1],pkt[nr_pkt][2],pkt[nr_pkt+1][1],pkt[nr_pkt+1][2])
+    cosinusy.write("          "+str(pkt[nr_pkt][0])+"          "+str(pkt[nr_pkt-1][0])+"          "+str(pkt[nr_pkt+1][0])+"          "+str(cos)+"\n")
+    cosinus_lista.append ( [pkt[nr_pkt][0],pkt[nr_pkt-1][0],pkt[nr_pkt+1][0], cos])
+    nr_pkt = nr_pkt+1
+cosinusy.close()
+
+# lista ze wszystkimi cosinusami
+print 'lista: cosinus_lista'
+print cosinus_lista
+
+# lista z dodatnimi cosinusami
+cosinus_1 = filter(wart_dodatnie, cosinus_lista)
+print '\n dodatnie wartosci cosinusa: lista cosinus_1'
+print cosinus_1
+
+# lista z ujemnymi cosinusami
+cosinus_2 = filter(wart_ujemne, cosinus_lista)
+print '\n ujemne wartości cosinusa: lista cosinus_2'
+print cosinus_2
+
+# zapis do pliku .txt jedynie wierszy z dodatnimi wartościami cosinusów
+cos_dod = open(r'cosinus_1.txt','w')
+cos_dod.write ("Wierzcholek  Lewe ramie kata  Prawe ramie kata  Wartosc kata \n")
+cos_dod.write (''.join(map(zapis,cosinus_1)))
+cos_dod.close()
+
+# zapis do pliku .txt jedynie wierszy z ujemnymi wartościami cosinusów
+cos_uj = open(r'cosinus_2.txt','w')
+cos_uj.write ("Wierzcholek  Lewe ramie kata  Prawe ramie kata  Wartosc kata \n")
+cos_uj.write (''.join(map(zapis,cosinus_2)))
+cos_uj.close()
